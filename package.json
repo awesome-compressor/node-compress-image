@@ -1,0 +1,103 @@
+{
+  "name": "node-image-compression",
+  "type": "module",
+  "version": "0.0.1",
+  "description": "一个集成多个Node.js压缩库的通用图像压缩工具，自动选择最优压缩结果",
+  "author": "Simon He",
+  "license": "MIT",
+  "funding": "https://github.com/sponsors/Simon-He95",
+  "homepage": "https://github.com/Simon-He95/node-image-compression#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Simon-He95/node-image-compression.git"
+  },
+  "bugs": "https://github.com/Simon-He95/node-image-compression/issues",
+  "keywords": [
+    "image",
+    "compression",
+    "compress",
+    "optimize",
+    "sharp",
+    "jimp",
+    "imagemin",
+    "squoosh",
+    "canvas",
+    "nodejs",
+    "typescript",
+    "multi-tool"
+  ],
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "*": [
+        "./dist/*",
+        "./dist/index.d.ts"
+      ]
+    }
+  },
+  "bin": {
+    "run": "./cli.mjs"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsdown",
+    "dev": "npm run build -- --watch src",
+    "format": "prettier --cache --write .",
+    "lint": "eslint . --cache",
+    "lint:fix": "npm run lint --fix",
+    "prepublishOnly": "nr build",
+    "release": "bumpp && npm publish",
+    "start": "esno src/index.ts",
+    "test": "vitest",
+    "test:run": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "example": "tsx examples/basic.ts",
+    "demo": "npx esno test/compression-demo.ts",
+    "analysis": "tsx test/analysis.ts",
+    "test-tools": "tsx test/tool-test.ts",
+    "compression": "tsx test/tool-test.ts",
+    "docs": "echo 'See README.md and INSTALL.md for documentation'"
+  },
+  "dependencies": {
+    "imagemin": "^8.0.1",
+    "imagemin-gifsicle": "^7.0.0",
+    "imagemin-jpegtran": "^8.0.0",
+    "imagemin-mozjpeg": "^10.0.0",
+    "imagemin-pngquant": "^9.0.2",
+    "imagemin-webp": "^8.0.0",
+    "sharp": "^0.33.0"
+  },
+  "devDependencies": {
+    "@antfu/eslint-config": "^4.14.1",
+    "@sxzz/prettier-config": "^2.2.1",
+    "@types/node": "^18.19.111",
+    "bumpp": "^8.2.1",
+    "eslint": "^9.28.0",
+    "lint-staged": "^13.3.0",
+    "picocolors": "^1.1.1",
+    "prettier": "^3.5.3",
+    "rimraf": "^3.0.2",
+    "tsdown": "^0.9.9",
+    "tsx": "^3.14.0",
+    "typescript": "^4.9.5",
+    "vitest": "^0.15.2"
+  },
+  "lint-staged": {
+    "*": [
+      "prettier --write --cache --ignore-unknown"
+    ],
+    "*.{vue,js,ts,jsx,tsx,md,json}": "eslint --fix"
+  },
+  "prettier": "@sxzz/prettier-config"
+}

@@ -1,0 +1,9 @@
+onlyBuiltDependencies:
+  - cwebp-bin
+  - esbuild
+  - gifsicle
+  - jpegtran-bin
+  - mozjpeg
+  - pngquant-bin
+  - rolldown
+  - sharp
