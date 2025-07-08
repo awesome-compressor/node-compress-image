@@ -85,12 +85,6 @@ export type CompressorTool
   = | 'sharp'
     | 'jimp'
     | 'imagemin'
-    | 'canvas'
-    | '@squoosh/lib'
-    | 'imagemin-mozjpeg'
-    | 'imagemin-pngquant'
-    | 'imagemin-webp'
-    | 'imagemin-gifsicle'
     | 'original'
 
 // 压缩尝试结果

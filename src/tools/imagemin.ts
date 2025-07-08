@@ -11,7 +11,6 @@ export async function compressWithImagemin(
       throw new Error('Invalid input buffer: buffer must be a non-empty Buffer')
     }
 
-    // @ts-expect-error - optional dependency
     const imagemin = await import('imagemin')
 
     if (!imagemin?.default?.buffer) {

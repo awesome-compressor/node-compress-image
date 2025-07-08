@@ -7,6 +7,11 @@ export async function compressWithSharp(
   options: CompressOptions,
 ): Promise<Buffer> {
   try {
+    // 验证输入buffer
+    if (!buffer || buffer.length === 0) {
+      throw new Error('Input buffer is empty or invalid')
+    }
+
     let processor = sharp(buffer)
 
     // 设置尺寸
@@ -23,27 +28,34 @@ export async function compressWithSharp(
       })
     }
 
-    // 获取图片元数据
-    const metadata = await processor.metadata()
+    // 获取图片元数据，添加错误处理
+    let metadata
+    try {
+      metadata = await processor.metadata()
+    }
+    catch (metadataError) {
+      throw new Error(`Failed to read image metadata: ${metadataError instanceof Error ? metadataError.message : String(metadataError)}`)
+    }
+
     const format = metadata.format
 
     // 根据格式进行压缩
     switch (format) {
       case 'jpeg':
         processor = processor.jpeg({
-          quality: Math.round((options.quality || 0.6) * 100),
+          quality: Math.min(100, Math.max(1, Math.round((options.quality || 0.6) * 100))),
           mozjpeg: true,
         })
         break
       case 'png':
         processor = processor.png({
-          quality: Math.round((options.quality || 0.6) * 100),
+          quality: Math.min(100, Math.max(1, Math.round((options.quality || 0.6) * 100))),
           compressionLevel: 9,
         })
         break
       case 'webp':
         processor = processor.webp({
-          quality: Math.round((options.quality || 0.6) * 100),
+          quality: Math.min(100, Math.max(1, Math.round((options.quality || 0.6) * 100))),
         })
         break
       case 'gif':
@@ -52,7 +64,7 @@ export async function compressWithSharp(
       default:
         // 默认转为JPEG
         processor = processor.jpeg({
-          quality: Math.round((options.quality || 0.6) * 100),
+          quality: Math.min(100, Math.max(1, Math.round((options.quality || 0.6) * 100))),
         })
     }
 

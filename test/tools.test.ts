@@ -174,7 +174,6 @@ describe('压缩工具单独测试', () => {
 
   describe('imagemin工具', () => {
     it('应该能够导入Imagemin模块', async () => {
-      // @ts-expect-error - optional dependency
       await expect(import('imagemin')).resolves.toBeDefined()
     })
 

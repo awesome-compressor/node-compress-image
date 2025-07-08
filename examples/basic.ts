@@ -1,5 +1,5 @@
 import process from 'node:process'
-import compress, { compressWithStats } from '../src/index'
+import { compress, compressWithStats } from '../src/index'
 
 // 使用示例
 async function example() {

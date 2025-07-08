@@ -4,13 +4,14 @@
 
 ## 特性
 
-- 🚀 **多工具集成**: 支持 Sharp、JIMP、Canvas、Imagemin、Squoosh 等多种压缩工具
+- 🚀 **多工具集成**: 支持 Sharp、ImageMin、JIMP 三种主流压缩工具
 - 🎯 **智能选择**: 自动比对多个工具的压缩结果，返回最优压缩效果
 - 📊 **详细统计**: 提供压缩时间、压缩率、工具性能等详细统计信息
 - 🔧 **灵活配置**: 支持质量、尺寸、EXIF保留等多种压缩选项
-- 📦 **按需安装**: 所有压缩工具均为可选依赖，按需安装使用
+- 📦 **按需安装**: JIMP为可选依赖，可以只使用Sharp和ImageMin核心功能
 - 🔄 **多种输出**: 支持 Buffer、Base64、Blob、File 等多种输出格式
 - 🔍 **向后兼容**: 支持传统参数格式，平滑迁移
+- 🌐 **格式齐全**: 支持 JPEG、PNG、WebP、GIF 等主流图像格式
 
 ## 安装
 
@@ -18,32 +19,22 @@
 npm install node-image-compression
 ```
 
-### 安装压缩工具（可选）
-
-根据需要安装对应的压缩工具：
+### 安装可选工具
 
 ```bash
-# Sharp - 推荐，性能最佳
-npm install sharp
+# 基础工具（推荐，已包含在核心依赖中）
+# Sharp - 高性能图像处理
+# ImageMin - 专业无损压缩
 
-# JIMP - 纯JavaScript实现
-npm install jimp
-
-# Canvas - Node.js Canvas API
-npm install canvas
-
-# Imagemin 系列 - 专业图像优化
-npm install imagemin imagemin-mozjpeg imagemin-pngquant imagemin-webp imagemin-gifsicle
-
-# Squoosh - Google开源压缩库
-npm install @squoosh/lib
+# 可选工具
+npm install jimp                # 纯JavaScript实现，无系统依赖
 ```
 
 ## 快速开始
 
 ```typescript
 import fs from 'node:fs'
-import compress, { compressWithStats } from 'node-image-compression'
+import { compress, compressWithStats } from 'node-image-compression'
 
 // 基础使用
 const imageBuffer = fs.readFileSync('input.jpg')
@@ -145,26 +136,24 @@ stats.toolsUsed.forEach((tool) => {
 | 工具 | 描述 | 优势 | 支持格式 |
 |------|------|------|----------|
 | Sharp | 高性能图像处理库 | 速度快，质量高 | JPEG, PNG, WebP, GIF |
+| ImageMin | 专业无损图像压缩工具 | 无损压缩，质量保留 | JPEG, PNG, WebP, GIF |
 | JIMP | 纯JavaScript图像处理 | 无二进制依赖 | JPEG, PNG, BMP, TIFF, GIF |
-| Canvas | Node.js Canvas API | HTML5 Canvas兼容 | JPEG, PNG, WebP |
-| Imagemin | 专业图像优化工具集 | 专业优化算法 | JPEG, PNG, WebP, GIF |
-| Squoosh | Google开源压缩库 | 现代压缩算法 | JPEG, PNG, WebP |
 
 ## 工具选择策略
 
 库会根据图像类型自动选择最适合的工具组合：
 
-- **PNG**: Sharp → Imagemin → Squoosh → JIMP → Canvas
-- **JPEG**: Sharp → Imagemin → Squoosh → JIMP → Canvas
-- **WebP**: Sharp → Squoosh → Imagemin → Canvas
-- **GIF**: Imagemin → Squoosh
-- **其他**: Sharp → Imagemin → Squoosh → JIMP → Canvas
+- **PNG**: Sharp → ImageMin → JIMP
+- **JPEG**: Sharp → ImageMin → JIMP
+- **WebP**: Sharp → ImageMin
+- **GIF**: ImageMin
+- **其他**: Sharp → ImageMin → JIMP
 
 ## 性能优势
 
-- **并行处理**: 所有工具同时运行，提高效率
+- **并行处理**: 三个工具同时运行，提高效率
 - **智能选择**: 自动选择压缩效果最佳的结果
-- **可选依赖**: 只安装需要的工具，减小包体积
+- **轻量级**: 只包含三个核心工具，减小包体积
 - **失败恢复**: 某个工具失败时自动使用其他工具
 
 ## :coffee:

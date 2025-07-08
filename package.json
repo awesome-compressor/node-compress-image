@@ -20,11 +20,8 @@
     "sharp",
     "jimp",
     "imagemin",
-    "squoosh",
-    "canvas",
     "nodejs",
-    "typescript",
-    "multi-tool"
+    "typescript"
   ],
   "sideEffects": false,
   "exports": {
@@ -61,8 +58,12 @@
     "start": "esno src/index.ts",
     "test": "vitest",
     "test:run": "vitest run",
+    "test:tools": "vitest run test/tools/",
+    "test:tools-watch": "vitest test/tools/",
+    "test:coverage": "vitest run --coverage",
     "typecheck": "tsc --noEmit",
-    "example": "esno examples/basic.ts"
+    "example": "esno examples/basic.ts",
+    "example:all": "esno examples/all-tools.ts"
   },
   "dependencies": {
     "imagemin": "^8.0.1",
@@ -71,22 +72,24 @@
     "imagemin-mozjpeg": "^10.0.0",
     "imagemin-pngquant": "^9.0.2",
     "imagemin-webp": "^8.0.0",
+    "jimp": "^0.22.0",
     "sharp": "^0.33.0"
   },
   "devDependencies": {
     "@antfu/eslint-config": "^4.14.1",
     "@sxzz/prettier-config": "^2.2.1",
-    "@types/node": "^18.19.111",
+    "@types/imagemin": "^9.0.1",
+    "@types/node": "^18.19.115",
     "bumpp": "^8.2.1",
-    "eslint": "^9.28.0",
+    "eslint": "^9.30.1",
     "esno": "^4.8.0",
     "lint-staged": "^13.3.0",
     "picocolors": "^1.1.1",
-    "prettier": "^3.5.3",
+    "prettier": "^3.6.2",
     "rimraf": "^3.0.2",
     "tsdown": "^0.9.9",
-    "typescript": "^4.9.5",
-    "vitest": "^0.15.2"
+    "typescript": "^5.8.3",
+    "vitest": "^3.2.4"
   },
   "lint-staged": {
     "*": [

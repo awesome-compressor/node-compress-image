@@ -41,6 +41,8 @@ async function tryImportTool(toolName: string) {
         return (await import('./tools/sharp')).compressWithSharp
       case 'imagemin':
         return (await import('./tools/imagemin')).compressWithImagemin
+      case 'jimp':
+        return (await import('./tools/jimp')).compressWithJimp
       default:
         return null
     }
@@ -55,6 +57,7 @@ async function tryImportTool(toolName: string) {
 const EXIF_SUPPORTED_TOOLS: CompressorTool[] = [
   'sharp',
   'jimp',
+  'imagemin',
 ]
 
 // 不同图片类型推荐的工具组合
@@ -62,8 +65,8 @@ const toolsCollections: Record<string, CompressorTool[]> = {
   png: ['sharp', 'imagemin'],
   gif: ['imagemin'],
   webp: ['sharp', 'imagemin'],
-  jpeg: ['sharp', 'imagemin'],
-  others: ['sharp', 'imagemin'],
+  jpeg: ['sharp', 'imagemin', 'jimp'],
+  others: ['sharp', 'imagemin', 'jimp'],
 }
 
 // 重载：支持新的选项对象参数 - 返回多结果
@@ -651,6 +654,3 @@ export type {
   FileInterface,
   MultipleCompressResults,
 }
-
-// 默认导出
-export default compress
