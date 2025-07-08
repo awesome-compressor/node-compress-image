@@ -1,3 +1,4 @@
+import process from 'node:process'
 import compress, { compressWithStats } from '../src/index'
 
 // 使用示例

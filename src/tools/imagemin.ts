@@ -11,7 +11,7 @@ export async function compressWithImagemin(
       throw new Error('Invalid input buffer: buffer must be a non-empty Buffer')
     }
 
-    // @ts-ignore - optional dependency
+    // @ts-expect-error - optional dependency
     const imagemin = await import('imagemin')
 
     if (!imagemin?.default?.buffer) {
@@ -34,7 +34,7 @@ export async function compressWithImagemin(
       switch (imageType) {
         case 'image/jpeg':
         case 'image/jpg': {
-          // @ts-ignore - optional dependency
+          // @ts-expect-error - optional dependency
           const imageminJpegtran = await import('imagemin-jpegtran')
           if (!imageminJpegtran?.default) {
             throw new Error('imagemin-jpegtran plugin not available')
@@ -48,7 +48,6 @@ export async function compressWithImagemin(
           break
         }
         case 'image/png': {
-          // @ts-ignore - optional dependency
           const imageminPngquant = await import('imagemin-pngquant')
           if (!imageminPngquant?.default) {
             throw new Error('imagemin-pngquant plugin not available')
@@ -61,7 +60,7 @@ export async function compressWithImagemin(
           break
         }
         case 'image/webp': {
-          // @ts-ignore - optional dependency
+          // @ts-expect-error - optional dependency
           const imageminWebp = await import('imagemin-webp')
           if (!imageminWebp?.default) {
             throw new Error('imagemin-webp plugin not available')
@@ -74,7 +73,7 @@ export async function compressWithImagemin(
           break
         }
         case 'image/gif': {
-          // @ts-ignore - optional dependency
+          // @ts-expect-error - optional dependency
           const imageminGifsicle = await import('imagemin-gifsicle')
           if (!imageminGifsicle?.default) {
             throw new Error('imagemin-gifsicle plugin not available')

@@ -1,4 +1,5 @@
 import type { CompressOptions } from '../types'
+import sharp from 'sharp'
 
 // Sharp压缩工具
 export async function compressWithSharp(
@@ -6,10 +7,7 @@ export async function compressWithSharp(
   options: CompressOptions,
 ): Promise<Buffer> {
   try {
-    // @ts-ignore - optional dependency
-    const sharp = await import('sharp')
-
-    let processor = sharp.default(buffer)
+    let processor = sharp(buffer)
 
     // 设置尺寸
     if (options.targetWidth || options.targetHeight) {

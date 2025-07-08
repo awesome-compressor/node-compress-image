@@ -7,6 +7,9 @@ export default antfu(
     ],
   },
   {
-    rules: {},
+    rules: {
+      'node/prefer-global/buffer': 'off',
+      'no-console': 'off',
+    },
   },
 )

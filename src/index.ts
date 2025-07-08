@@ -10,26 +10,9 @@ import type {
   FileInterface,
   MultipleCompressResults,
 } from './types'
+import process from 'node:process'
 
 import { convertBufferToType, getBufferFromFile } from './utils'
-
-// 动态导入压缩工具（可选依赖）
-async function tryImportTool(toolName: string) {
-  try {
-    switch (toolName) {
-      case 'sharp':
-        return (await import('./tools/sharp')).compressWithSharp
-      case 'imagemin':
-        return (await import('./tools/imagemin')).compressWithImagemin
-      default:
-        return null
-    }
-  }
-  catch (error) {
-    devLog.warn(`Tool ${toolName} not available:`, error instanceof Error ? error.message : String(error))
-    return null
-  }
-}
 
 // 开发环境日志工具
 const devLog = {
@@ -48,6 +31,24 @@ const devLog = {
       console.table(data)
     }
   },
+}
+
+// 动态导入压缩工具（可选依赖）
+async function tryImportTool(toolName: string) {
+  try {
+    switch (toolName) {
+      case 'sharp':
+        return (await import('./tools/sharp')).compressWithSharp
+      case 'imagemin':
+        return (await import('./tools/imagemin')).compressWithImagemin
+      default:
+        return null
+    }
+  }
+  catch (error) {
+    devLog.warn(`Tool ${toolName} not available:`, error instanceof Error ? error.message : String(error))
+    return null
+  }
 }
 
 // 支持 EXIF 保留的工具（这些工具需要额外配置才能保留EXIF）

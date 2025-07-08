@@ -174,18 +174,17 @@ describe('压缩工具单独测试', () => {
 
   describe('imagemin工具', () => {
     it('应该能够导入Imagemin模块', async () => {
-      // @ts-ignore - optional dependency
+      // @ts-expect-error - optional dependency
       await expect(import('imagemin')).resolves.toBeDefined()
     })
 
     it('应该能够导入Imagemin插件', async () => {
-      // @ts-ignore - optional dependency
       await expect(import('imagemin-pngquant')).resolves.toBeDefined()
-      // @ts-ignore - optional dependency
+      // @ts-expect-error - optional dependency
       await expect(import('imagemin-jpegtran')).resolves.toBeDefined()
-      // @ts-ignore - optional dependency
+      // @ts-expect-error - optional dependency
       await expect(import('imagemin-webp')).resolves.toBeDefined()
-      // @ts-ignore - optional dependency
+      // @ts-expect-error - optional dependency
       await expect(import('imagemin-gifsicle')).resolves.toBeDefined()
     })
 
