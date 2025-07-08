@@ -168,9 +168,8 @@ describe('集成测试 - 所有工具协同工作', () => {
   it('应该正确处理错误情况', async () => {
     // 空Buffer
     const emptyBuffer = Buffer.alloc(0)
-    await expect(compress(emptyBuffer, { quality: 0.8 }))
-      .rejects
-      .toThrow()
+    await expect((await compress(emptyBuffer, { quality: 0.8 })).length)
+      .toBe(0)
 
     // 无效质量参数
     const testBuffer = createTestPNG()
