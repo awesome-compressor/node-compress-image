@@ -68,7 +68,15 @@ export async function compressWithSharp(
         })
     }
 
-    return await processor.toBuffer()
+    const result = await processor.toBuffer()
+
+    // 如果压缩后文件大于或接近原文件大小，返回原文件
+    // 使用 98% 阈值，避免微小的压缩效果
+    if (result.length >= buffer.length * 0.98) {
+      return buffer
+    }
+
+    return result
   }
   catch (error) {
     throw new Error(`Sharp compression failed: ${error instanceof Error ? error.message : String(error)}`)

@@ -61,6 +61,12 @@ export async function compressWithJimp(
       throw new Error('Failed to generate output buffer from Jimp')
     }
 
+    // 如果压缩后文件大于或接近原文件大小，返回原文件
+    // 使用 98% 阈值，避免微小的压缩效果
+    if (outputBuffer.length >= buffer.length * 0.98) {
+      return buffer
+    }
+
     return outputBuffer
   }
   catch (error) {
