@@ -2,6 +2,7 @@
   "name": "@awesome-compressor/node-image-compression",
   "type": "module",
   "version": "0.0.1",
+  "packageManager": "pnpm@10.12.4",
   "description": "一个集成多个Node.js压缩库的通用图像压缩工具，自动选择最优压缩结果",
   "author": "Simon He",
   "license": "MIT",
