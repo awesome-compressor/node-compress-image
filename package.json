@@ -1,17 +1,17 @@
 {
-  "name": "node-image-compression",
+  "name": "@awesome-compressor/node-image-compression",
   "type": "module",
   "version": "0.0.1",
   "description": "一个集成多个Node.js压缩库的通用图像压缩工具，自动选择最优压缩结果",
   "author": "Simon He",
   "license": "MIT",
-  "funding": "https://github.com/sponsors/Simon-He95",
-  "homepage": "https://github.com/Simon-He95/node-image-compression#readme",
+  "funding": "https://github.com/sponsors/awesome-compressor",
+  "homepage": "https://github.com/awesome-compressor/node-image-compression#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Simon-He95/node-image-compression.git"
+    "url": "git+https://github.com/awesome-compressor/node-image-compression.git"
   },
-  "bugs": "https://github.com/Simon-He95/node-image-compression/issues",
+  "bugs": "https://github.com/awesome-compressor/node-image-compression/issues",
   "keywords": [
     "image",
     "compression",
