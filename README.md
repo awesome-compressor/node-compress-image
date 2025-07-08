@@ -16,7 +16,7 @@
 ## 安装
 
 ```bash
-npm install node-image-compression
+npm install @awesome-compressor/node-image-compression
 ```
 
 ### 安装可选工具
