@@ -4,7 +4,7 @@
 
 ## 特性
 
-- 🚀 **多工具集成**: 支持 Sharp、ImageMin、JIMP 三种主流压缩工具
+- 🚀 **多工具集成**: 支持 Sharp、ImageMin、JIMP、Tinify 四种主流压缩工具
 - 🎯 **智能选择**: 自动比对多个工具的压缩结果，返回最优压缩效果
 - 📊 **详细统计**: 提供压缩时间、压缩率、工具性能等详细统计信息
 - 🔧 **灵活配置**: 支持质量、尺寸、EXIF保留等多种压缩选项
@@ -28,6 +28,7 @@ npm install @awesome-compressor/node-image-compression
 
 # 可选工具
 npm install jimp                # 纯JavaScript实现，无系统依赖
+npm install tinify              # TinyPNG/TinyJPG官方API，需要API密钥
 ```
 
 ## 快速开始
@@ -138,23 +139,49 @@ stats.toolsUsed.forEach((tool) => {
 | Sharp | 高性能图像处理库 | 速度快，质量高 | JPEG, PNG, WebP, GIF |
 | ImageMin | 专业无损图像压缩工具 | 无损压缩，质量保留 | JPEG, PNG, WebP, GIF |
 | JIMP | 纯JavaScript图像处理 | 无二进制依赖 | JPEG, PNG, BMP, TIFF, GIF |
+| Tinify | TinyPNG/TinyJPG官方API | 智能有损压缩，压缩率高 | JPEG, PNG, WebP |
+
+### Tinify 配置
+
+Tinify 需要API密钥才能使用。你可以通过以下方式配置：
+
+1. **通过环境变量**:
+```bash
+export TINIFY_API_KEY="your-api-key-here"
+```
+
+2. **通过参数传递**:
+```typescript
+const result = await compress(imageBuffer, {
+  quality: 0.8,
+  toolConfigs: [
+    {
+      name: 'tinify',
+      key: 'your-api-key-here'
+    }
+  ]
+})
+```
+
+获取API密钥: [TinyPNG Developer API](https://tinypng.com/developers)
 
 ## 工具选择策略
 
 库会根据图像类型自动选择最适合的工具组合：
 
-- **PNG**: Sharp → ImageMin → JIMP
-- **JPEG**: Sharp → ImageMin → JIMP
-- **WebP**: Sharp → ImageMin
+- **PNG**: Sharp → ImageMin → Tinify
+- **JPEG**: Sharp → ImageMin → JIMP → Tinify
+- **WebP**: Sharp → ImageMin → Tinify
 - **GIF**: ImageMin
-- **其他**: Sharp → ImageMin → JIMP
+- **其他**: Sharp → ImageMin → JIMP → Tinify
 
 ## 性能优势
 
-- **并行处理**: 三个工具同时运行，提高效率
+- **并行处理**: 多个工具同时运行，提高效率
 - **智能选择**: 自动选择压缩效果最佳的结果
-- **轻量级**: 只包含三个核心工具，减小包体积
+- **轻量级**: 按需加载工具，减小包体积
 - **失败恢复**: 某个工具失败时自动使用其他工具
+- **灵活配置**: 支持工具特定的配置参数
 
 ## :coffee:
 

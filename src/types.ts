@@ -19,6 +19,24 @@ export interface BlobInterface {
 // 压缩模式
 export type CompressMode = 'keepSize' | 'keepQuality'
 
+/**
+ * 工具配置接口
+ */
+export interface ToolConfig {
+  /**
+   * 工具名称
+   */
+  name: string
+  /**
+   * API 密钥或其他配置参数
+   */
+  key?: string
+  /**
+   * 其他自定义配置参数
+   */
+  [key: string]: any
+}
+
 // 压缩选项
 export interface CompressOptions {
   quality?: number // 压缩质量 0-1
@@ -29,6 +47,10 @@ export interface CompressOptions {
   maxHeight?: number // 最大高度
   preserveExif?: boolean // 是否保留EXIF信息
   returnAllResults?: boolean // 是否返回所有工具的结果
+  /**
+   * 工具特定的配置参数
+   */
+  toolConfigs?: ToolConfig[]
 }
 
 // 压缩结果
@@ -85,6 +107,7 @@ export type CompressorTool
   = | 'sharp'
     | 'jimp'
     | 'imagemin'
+    | 'tinify'
     | 'original'
 
 // 压缩尝试结果

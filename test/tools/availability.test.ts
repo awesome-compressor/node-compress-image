@@ -1,3 +1,4 @@
+import process from 'node:process'
 import { beforeAll, describe, expect, it } from 'vitest'
 import { isToolAvailable } from '../helpers'
 
@@ -6,6 +7,7 @@ describe('工具可用性测试', () => {
     { name: 'sharp', type: 'core', required: true },
     { name: 'imagemin', type: 'core', required: true },
     { name: 'jimp', type: 'optional', required: true },
+    { name: 'tinify', type: 'optional', required: false },
   ]
 
   const toolStatus: Record<string, { available: boolean, hasEnv?: boolean }> = {}
@@ -17,6 +19,11 @@ describe('工具可用性测试', () => {
       const available = await isToolAvailable(tool.name)
 
       toolStatus[tool.name] = { available }
+
+      // 检查Tinify是否有API Key
+      if (tool.name === 'tinify' && available) {
+        toolStatus[tool.name].hasEnv = !!process.env.TINIFY_API_KEY
+      }
 
       const status = available ? '✅' : '❌'
       console.log(`   ${status} ${tool.name} (${tool.type})`)

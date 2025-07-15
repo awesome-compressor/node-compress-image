@@ -9,6 +9,7 @@ import type {
   CompressResultType,
   FileInterface,
   MultipleCompressResults,
+  ToolConfig,
 } from './types'
 import process from 'node:process'
 
@@ -43,6 +44,8 @@ async function tryImportTool(toolName: string) {
         return (await import('./tools/imagemin')).compressWithImagemin
       case 'jimp':
         return (await import('./tools/jimp')).compressWithJimp
+      case 'tinify':
+        return (await import('./tools/tinify')).compressWithTinify
       default:
         return null
     }
@@ -62,11 +65,11 @@ const EXIF_SUPPORTED_TOOLS: CompressorTool[] = [
 
 // 不同图片类型推荐的工具组合
 const toolsCollections: Record<string, CompressorTool[]> = {
-  png: ['sharp', 'imagemin'],
+  png: ['sharp', 'imagemin', 'tinify'],
   gif: ['imagemin'],
-  webp: ['sharp', 'imagemin'],
-  jpeg: ['sharp', 'imagemin', 'jimp'],
-  others: ['sharp', 'imagemin', 'jimp'],
+  webp: ['sharp', 'imagemin', 'tinify'],
+  jpeg: ['sharp', 'imagemin', 'jimp', 'tinify'],
+  others: ['sharp', 'imagemin', 'jimp', 'tinify'],
 }
 
 // 重载：支持新的选项对象参数 - 返回多结果
@@ -653,4 +656,5 @@ export type {
   CompressResultType,
   FileInterface,
   MultipleCompressResults,
+  ToolConfig,
 }
