@@ -3,7 +3,7 @@ import { compress, compressWithStats } from '../src/index'
 
 // 使用示例
 async function example() {
-  console.log('🚀 Node Image Compression 三工具集成示例\n')
+  console.log('🚀 Node Compress Image 多工具集成示例\n')
 
   // 创建一个简单的测试图像
   const testPNG = Buffer.from([
@@ -95,7 +95,7 @@ async function example() {
     })
 
     console.log('✅ 基础压缩成功')
-    console.log(`   压缩后大小: ${(basicResult as any).length} bytes`)
+    console.log(`   压缩后大小: ${basicResult.length} bytes`)
     console.log(`   类型: buffer`)
     console.log()
   }
@@ -150,21 +150,21 @@ async function example() {
       quality: 0.8,
       type: 'buffer',
     })
-    console.log(`✅ Buffer: ${(bufferResult as any).length} bytes`)
+    console.log(`✅ Buffer: ${bufferResult.length} bytes`)
 
     // Base64格式
     const base64Result = await compress(testPNG, {
       quality: 0.8,
       type: 'base64',
     })
-    console.log(`✅ Base64: ${(base64Result as any).length} characters`)
+    console.log(`✅ Base64: ${base64Result.length} characters`)
 
     // Blob格式
     const blobResult = await compress(testPNG, {
       quality: 0.8,
       type: 'blob',
     })
-    console.log(`✅ Blob: ${(blobResult as any).size} bytes`)
+    console.log(`✅ Blob: ${blobResult.size} bytes`)
     console.log()
   }
   catch (error) {
@@ -178,12 +178,10 @@ async function example() {
       quality: 0.6,
       targetWidth: 800,
       targetHeight: 600,
-      preserveExif: true,
-      mode: 'keepQuality',
     })
 
     console.log('✅ 高级选项压缩成功')
-    console.log(`   压缩后大小: ${(advancedResult as any).length} bytes`)
+    console.log(`   压缩后大小: ${advancedResult.length} bytes`)
     console.log(`   类型: buffer`)
     console.log()
   }
@@ -194,9 +192,10 @@ async function example() {
   console.log('🎉 示例完成!')
   console.log('\n📚 可用的压缩工具:')
   console.log('   ✅ Sharp (核心) - 高性能图像处理')
-  console.log('   ✅ ImageMin (核心) - 专业无损压缩')
+  console.log('   ✅ ImageMin (核心) - 专业图像优化')
   console.log('   ✅ JIMP (可选) - 纯JavaScript实现')
-  console.log('\n安装可选工具: npm install jimp')
+  console.log('   ✅ Tinify (可选) - TinyPNG/TinyJPG官方API')
+  console.log('\n安装可选工具: npm install jimp tinify')
 }
 
 // 运行示例

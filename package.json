@@ -1,37 +1,54 @@
 {
-  "name": "@awesome-compressor/node-image-compression",
+  "name": "@awesome-compressor/node-compress-image",
   "type": "module",
   "version": "0.0.3",
   "packageManager": "pnpm@10.13.1",
-  "description": "一个集成多个Node.js压缩库的通用图像压缩工具，自动选择最优压缩结果",
+  "description": "Node.js image compressor and optimizer for JPEG, PNG, WebP and AVIF with Sharp, imagemin, Jimp and Tinify",
   "author": "Simon He",
   "license": "MIT",
   "funding": "https://github.com/sponsors/awesome-compressor",
-  "homepage": "https://github.com/awesome-compressor/node-image-compression#readme",
+  "homepage": "https://github.com/awesome-compressor/node-compress-image#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/awesome-compressor/node-image-compression.git"
+    "url": "git+https://github.com/awesome-compressor/node-compress-image.git"
   },
-  "bugs": "https://github.com/awesome-compressor/node-image-compression/issues",
+  "bugs": "https://github.com/awesome-compressor/node-compress-image/issues",
   "keywords": [
-    "image",
-    "compression",
-    "compress",
-    "optimize",
-    "sharp",
-    "jimp",
+    "avif",
+    "batch-image-compression",
+    "core-web-vitals",
+    "image-compression",
+    "image-compressor",
+    "image-optimization",
+    "image-optimizer",
     "imagemin",
+    "image",
+    "jimp",
+    "node-image-compression",
     "nodejs",
-    "typescript"
+    "optimize",
+    "responsive-images",
+    "seo",
+    "sharp",
+    "tinify",
+    "tinypng",
+    "typescript",
+    "webp"
   ],
   "sideEffects": false,
   "exports": {
     ".": {
-      "import": "./dist/index.js",
-      "require": "./dist/index.cjs"
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
     }
   },
-  "main": "./dist/index.js",
+  "main": "./dist/index.cjs",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "typesVersions": {
@@ -42,19 +59,20 @@
       ]
     }
   },
-  "bin": {
-    "run": "./cli.mjs"
-  },
   "files": [
     "dist"
   ],
+  "engines": {
+    "node": ">=18.17.0"
+  },
   "scripts": {
     "build": "tsdown",
     "dev": "npm run build -- --watch src",
     "format": "prettier --cache --write .",
     "lint": "eslint . --cache",
     "lint:fix": "npm run lint --fix",
-    "prepublishOnly": "nr build",
+    "postbuild": "node -e \"const fs = require('node:fs'); for (const file of ['dist/index.d.ts', 'dist/index.d.cts']) { const ref = '/// <reference types=\\\"node\\\" />\\n'; const content = fs.readFileSync(file, 'utf8'); if (!content.startsWith(ref)) fs.writeFileSync(file, ref + content); }\"",
+    "prepublishOnly": "npm run build",
     "release": "bumpp && npm publish",
     "start": "esno src/index.ts",
     "test": "vitest",
@@ -64,31 +82,43 @@
     "test:coverage": "vitest run --coverage",
     "typecheck": "tsc --noEmit",
     "example": "esno examples/basic.ts",
-    "example:all": "esno examples/all-tools.ts"
+    "example:all": "esno examples/all-tools.ts",
+    "example:seo": "esno examples/seo.ts"
+  },
+  "peerDependencies": {
+    "jimp": "^0.22.12",
+    "tinify": "^1.8.1"
+  },
+  "peerDependenciesMeta": {
+    "jimp": {
+      "optional": true
+    },
+    "tinify": {
+      "optional": true
+    }
   },
   "dependencies": {
+    "@types/node": "^18.19.118",
     "imagemin": "^8.0.1",
     "imagemin-gifsicle": "^7.0.0",
-    "imagemin-jpegtran": "^8.0.0",
     "imagemin-mozjpeg": "^10.0.0",
     "imagemin-pngquant": "^9.0.2",
     "imagemin-webp": "^8.0.0",
-    "jimp": "^0.22.12",
-    "sharp": "^0.33.5",
-    "tinify": "^1.8.1"
+    "sharp": "^0.33.5"
   },
   "devDependencies": {
     "@antfu/eslint-config": "^4.17.0",
     "@sxzz/prettier-config": "^2.2.3",
     "@types/imagemin": "^9.0.1",
-    "@types/node": "^18.19.118",
     "bumpp": "^8.2.1",
     "eslint": "^9.31.0",
     "esno": "^4.8.0",
+    "jimp": "^0.22.12",
     "lint-staged": "^13.3.0",
     "picocolors": "^1.1.1",
     "prettier": "^3.6.2",
     "rimraf": "^3.0.2",
+    "tinify": "^1.8.1",
     "tsdown": "^0.9.9",
     "typescript": "^5.8.3",
     "vitest": "^3.2.4"

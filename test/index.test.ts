@@ -1,14 +1,17 @@
+import type { CompressOptions } from '../src/index'
 import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
+import sharp from 'sharp'
 import { describe, expect, it } from 'vitest'
-import { compress, compressWithStats } from '../src/index'
+import { compress, compressDetailed, compressFiles, compressVariants, compressWithStats, getCapabilities, getSupportedFormats } from '../src/index'
+import { bufferToBlob, bufferToFile, convertBufferToType, getBufferFromFile } from '../src/utils'
 
 // ESM模块中获取__dirname
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
-describe('node-image-compression', () => {
+describe('node-compress-image', () => {
   // 创建一个简单的测试图像Buffer (1x1 PNG)
   const createTestPNG = (): Buffer => {
     return Buffer.from([
@@ -99,6 +102,15 @@ describe('node-image-compression', () => {
     expect(result.length).toBeGreaterThan(0)
   })
 
+  it('should accept exported CompressOptions with return type', async () => {
+    const testImage = createTestPNG()
+    const options: CompressOptions = { quality: 0.8, type: 'base64' }
+    const result = await compress(testImage, options)
+
+    result satisfies string
+    expect(result.length).toBeGreaterThan(0)
+  })
+
   it('should provide compression stats', async () => {
     const testImage = createTestPNG()
     const stats = await compressWithStats(testImage, { quality: 0.8 })
@@ -111,6 +123,107 @@ describe('node-image-compression', () => {
     expect(stats).toHaveProperty('toolsUsed')
     expect(Array.isArray(stats.toolsUsed)).toBe(true)
     expect(stats.originalSize).toBe(testImage.length)
+  })
+
+  it('should expose compressor capabilities', async () => {
+    const capabilities = await getCapabilities()
+
+    expect(getSupportedFormats()).toContain('jpeg')
+    expect(capabilities.outputFormats).toContain('avif')
+    expect(capabilities.strategies).toContain('targetSize')
+    expect(capabilities.metadata).toContain('all')
+    expect(capabilities.tools.some(tool => tool.tool === 'sharp' && tool.installed)).toBe(true)
+  })
+
+  it('should convert output format', async () => {
+    const testImage = await sharp({
+      create: {
+        width: 10,
+        height: 10,
+        channels: 3,
+        background: '#336699',
+      },
+    }).png().toBuffer()
+    const result = await compress(testImage, { quality: 0.8, format: 'webp' })
+    const metadata = await sharp(result).metadata()
+
+    expect(metadata.format).toBe('webp')
+  })
+
+  it('should return detailed compression result with selected reason', async () => {
+    const testImage = createTestPNG()
+    const result = await compressDetailed(testImage, { quality: 0.8, strategy: 'balanced' })
+
+    expect(Buffer.isBuffer(result.output)).toBe(true)
+    expect(result.selectedReason).toContain('within 10%')
+    expect(result.metadata.input.format).toBe('png')
+    expect(result.toolsUsed.length).toBeGreaterThan(0)
+  })
+
+  it('should create output variants', async () => {
+    const testImage = await sharp({
+      create: {
+        width: 10,
+        height: 10,
+        channels: 3,
+        background: '#ffcc00',
+      },
+    }).png().toBuffer()
+    const variants = await compressVariants(testImage, {
+      quality: 0.8,
+      formats: ['webp', 'avif'],
+    })
+
+    expect(variants.map(variant => variant.format)).toEqual(['webp', 'avif'])
+    expect(variants.every(variant => Buffer.isBuffer(variant.result.output))).toBe(true)
+  })
+
+  it('should support targetBytes strategy', async () => {
+    const testImage = await sharp({
+      create: {
+        width: 120,
+        height: 120,
+        channels: 3,
+        background: '#336699',
+      },
+    }).png().toBuffer()
+
+    const result = await compressDetailed(testImage, {
+      quality: 0.9,
+      targetBytes: Math.max(100, testImage.length - 1),
+    })
+
+    expect(result.selectedReason).toContain('targetBytes')
+    expect(result.compressedSize).toBeGreaterThan(0)
+  })
+
+  it('should compress files with cache manifest', async () => {
+    const testImage = createTestPNG()
+    const outputDir = path.join(__dirname, '..', 'tmp', 'test-output', 'batch')
+    const inputDir = path.join(outputDir, 'input')
+    const inputPath = path.join(inputDir, 'sample.png')
+    const cacheFile = path.join(outputDir, 'cache.json')
+
+    fs.rmSync(outputDir, { force: true, recursive: true })
+    fs.mkdirSync(inputDir, { recursive: true })
+    fs.writeFileSync(inputPath, testImage)
+
+    const firstRun = await compressFiles([inputPath], {
+      outputDir,
+      cacheFile,
+      quality: 0.8,
+      format: 'webp',
+    })
+    const secondRun = await compressFiles([inputPath], {
+      outputDir,
+      cacheFile,
+      quality: 0.8,
+      format: 'webp',
+    })
+
+    expect(firstRun[0].skipped).toBe(false)
+    expect(secondRun[0].skipped).toBe(true)
+    expect(fs.existsSync(firstRun[0].outputPath)).toBe(true)
   })
 
   it('should work with legacy parameter format', async () => {
@@ -128,12 +241,212 @@ describe('node-image-compression', () => {
       size: testImage.length,
       type: 'image/png',
       async arrayBuffer() {
-        return new ArrayBuffer(testImage.byteLength)
+        return Uint8Array.from(testImage).buffer
       },
     }
 
     const result = await compress(fileObj, { quality: 0.8 })
     expect(Buffer.isBuffer(result)).toBe(true)
+  })
+
+  it('should preserve bytes when converting buffers to blob and file objects', async () => {
+    const source = Buffer.from([0, 1, 2, 3, 255])
+
+    const blob = bufferToBlob(source, 'application/octet-stream')
+    const file = bufferToFile(source, 'test.bin', 'application/octet-stream')
+
+    expect(await getBufferFromFile(blob)).toEqual(source)
+    expect(await getBufferFromFile(file)).toEqual(source)
+  })
+
+  it('should snapshot blob and file bytes when converting from buffers', async () => {
+    const source = Buffer.from([1, 2, 3])
+    const blob = bufferToBlob(source, 'application/octet-stream')
+    const file = bufferToFile(source, 'test.bin', 'application/octet-stream')
+
+    source.fill(9)
+
+    expect(await getBufferFromFile(blob)).toEqual(Buffer.from([1, 2, 3]))
+    expect(await getBufferFromFile(file)).toEqual(Buffer.from([1, 2, 3]))
+  })
+
+  it('should return real bytes for blob and file outputs', async () => {
+    const testImage = createTestPNG()
+    const fileObj = {
+      name: 'test.png',
+      size: testImage.length,
+      type: 'image/png',
+      async arrayBuffer() {
+        return Uint8Array.from(testImage).buffer
+      },
+    }
+
+    const blobResult = await compress(testImage, { quality: 0.8, type: 'blob' })
+    const fileResult = await compress(fileObj, { quality: 0.8, type: 'file' })
+
+    const blobBuffer = Buffer.from(await blobResult.arrayBuffer())
+    const fileBuffer = Buffer.from(await fileResult.arrayBuffer())
+
+    expect(blobBuffer.length).toBe(blobResult.size)
+    expect(fileBuffer.length).toBe(fileResult.size)
+    expect(blobBuffer.equals(Buffer.alloc(blobBuffer.length))).toBe(false)
+    expect(fileBuffer.equals(Buffer.alloc(fileBuffer.length))).toBe(false)
+  })
+
+  it('should infer blob and file MIME types from bytes', async () => {
+    const jpeg = Buffer.from([0xFF, 0xD8, 0xFF, 0xD9])
+    const gif = Buffer.from('GIF89a', 'ascii')
+    const webp = Buffer.from('RIFFxxxxWEBP', 'ascii')
+
+    const jpegBlob = await convertBufferToType(jpeg, 'blob')
+    const gifFile = await convertBufferToType(gif, 'file', 'wrong.png')
+    const webpBlob = await convertBufferToType(webp, 'blob')
+
+    expect(jpegBlob.type).toBe('image/jpeg')
+    expect(gifFile.type).toBe('image/gif')
+    expect(webpBlob.type).toBe('image/webp')
+  })
+
+  it('should expose real bytes in compression stats file', async () => {
+    const testImage = createTestPNG()
+    const stats = await compressWithStats(testImage, { quality: 0.8 })
+    const compressedFileBuffer = Buffer.from(await stats.compressedFile.arrayBuffer())
+
+    expect(compressedFileBuffer.length).toBe(stats.compressedFile.size)
+    expect(compressedFileBuffer.equals(Buffer.alloc(compressedFileBuffer.length))).toBe(false)
+  })
+
+  it('should reject unsupported image formats', async () => {
+    const invalidBuffer = Buffer.from('invalid image data')
+
+    await expect(compress(invalidBuffer, { quality: 0.8 }))
+      .rejects
+      .toThrow('Unsupported image format')
+
+    await expect(compressWithStats(invalidBuffer, { quality: 0.8 }))
+      .rejects
+      .toThrow('Unsupported image format')
+  })
+
+  it('should reject quality values outside 0 to 1', async () => {
+    const testImage = createTestPNG()
+
+    await expect(compress(testImage, { quality: 1.5 }))
+      .rejects
+      .toThrow('quality must be a number between 0 and 1')
+
+    await expect(compressWithStats(testImage, { quality: -0.1 }))
+      .rejects
+      .toThrow('quality must be a number between 0 and 1')
+  })
+
+  it('should accept boundary quality values', async () => {
+    const testImage = createTestPNG()
+
+    for (const quality of [0, 1]) {
+      const result = await compress(testImage, { quality })
+      const stats = await compressWithStats(testImage, { quality })
+
+      expect(Buffer.isBuffer(result)).toBe(true)
+      expect(result.length).toBeGreaterThan(0)
+      expect(stats.originalSize).toBe(testImage.length)
+      expect(stats.compressedSize).toBeGreaterThan(0)
+    }
+  })
+
+  it('should reject invalid dimension values', async () => {
+    const testImage = createTestPNG()
+
+    await expect(compress(testImage, { quality: 0.8, maxWidth: 0 }))
+      .rejects
+      .toThrow('maxWidth must be a positive integer')
+
+    await expect(compress(testImage, { quality: 0.8, targetHeight: 10.5 }))
+      .rejects
+      .toThrow('targetHeight must be a positive integer')
+
+    await expect(compressWithStats(testImage, { quality: 0.8, maxHeight: Number.NaN }))
+      .rejects
+      .toThrow('maxHeight must be a positive integer')
+  })
+
+  it('should reject invalid option object values', async () => {
+    const testImage = createTestPNG()
+
+    await expect(compress(testImage, null as any))
+      .rejects
+      .toThrow('options must be an object')
+
+    await expect(compress(testImage, [] as any))
+      .rejects
+      .toThrow('options must be an object')
+
+    await expect(compress(testImage, { quality: 0.8, returnAllResults: 'false' as any }))
+      .rejects
+      .toThrow('returnAllResults must be a boolean')
+
+    await expect(compress(testImage, { quality: 0.8, toolConfigs: {} as any }))
+      .rejects
+      .toThrow('toolConfigs must be an array')
+
+    await expect(compressWithStats(testImage, { quality: 0.8, preserveExif: 'true' as any }))
+      .rejects
+      .toThrow('preserveExif must be a boolean')
+
+    await expect(compressWithStats(testImage, [] as any))
+      .rejects
+      .toThrow('options must be an object')
+  })
+
+  it('should reject invalid file inputs', async () => {
+    const testImage = createTestPNG()
+
+    await expect(compress(null as any, { quality: 0.8 }))
+      .rejects
+      .toThrow('file must be a Buffer, Blob-like object, or File-like object')
+
+    await expect(compress({
+      name: 123,
+      size: testImage.length,
+      type: 'image/png',
+      async arrayBuffer() {
+        return Uint8Array.from(testImage).buffer
+      },
+    } as any, { quality: 0.8 }))
+      .rejects
+      .toThrow('file.name must be a string')
+
+    await expect(compressWithStats({} as any, { quality: 0.8 }))
+      .rejects
+      .toThrow('file must be a Buffer, Blob-like object, or File-like object')
+  })
+
+  it('should reject unsupported result types', async () => {
+    const testImage = createTestPNG()
+
+    await expect(compress(testImage, { quality: 0.8, type: 'arraybuffer' as any }))
+      .rejects
+      .toThrow('type must be one of buffer, base64, blob, or file')
+
+    await expect(compress(testImage, 0.8, '' as any))
+      .rejects
+      .toThrow('type must be one of buffer, base64, blob, or file')
+
+    await expect(convertBufferToType(testImage, 'arraybuffer' as any))
+      .rejects
+      .toThrow('type must be one of buffer, base64, blob, or file')
+  })
+
+  it('should reject result type for compression stats', async () => {
+    const testImage = createTestPNG()
+
+    await expect(compressWithStats(testImage, { quality: 0.8, type: 'buffer' } as any))
+      .rejects
+      .toThrow('compressWithStats does not support type')
+
+    await expect(compressWithStats(testImage, { quality: 0.8, returnAllResults: true } as any))
+      .rejects
+      .toThrow('compressWithStats does not support returnAllResults')
   })
 
   it('should compress real icon.png and show tool comparison', async () => {

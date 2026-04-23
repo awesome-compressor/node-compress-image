@@ -323,7 +323,7 @@ export function getTestImageByFormat(format: 'png' | 'jpeg' | 'gif'): Buffer {
 
 // 测试输出目录
 export function getOutputDir(): string {
-  return path.join(__dirname, 'output')
+  return path.join(__dirname, '..', 'tmp', 'test-output')
 }
 
 // 确保输出目录存在

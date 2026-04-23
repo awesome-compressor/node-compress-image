@@ -2,11 +2,13 @@ import type { BlobInterface, CompressResult, CompressResultType, FileInterface }
 
 // Buffer转Blob
 export function bufferToBlob(buffer: Buffer, type = 'image/png'): BlobInterface {
+  const data = Buffer.from(buffer)
+
   return {
-    size: buffer.length,
+    size: data.length,
     type,
     async arrayBuffer() {
-      return new ArrayBuffer(buffer.byteLength)
+      return bufferToArrayBuffer(data)
     },
   }
 }
@@ -18,12 +20,14 @@ export function bufferToBase64(buffer: Buffer): string {
 
 // Buffer转File
 export function bufferToFile(buffer: Buffer, fileName = 'compressed', type = 'image/png'): FileInterface {
+  const data = Buffer.from(buffer)
+
   return {
     name: fileName,
-    size: buffer.length,
+    size: data.length,
     type,
     async arrayBuffer() {
-      return new ArrayBuffer(buffer.byteLength)
+      return bufferToArrayBuffer(data)
     },
   }
 }
@@ -34,7 +38,7 @@ export async function convertBufferToType<T extends CompressResultType>(
   type: T,
   fileName?: string,
 ): Promise<CompressResult<T>> {
-  const mimeType = getMimeTypeFromFileName(fileName) || 'image/png'
+  const mimeType = getMimeTypeFromBuffer(buffer) || getMimeTypeFromFileName(fileName) || 'application/octet-stream'
 
   switch (type) {
     case 'buffer':
@@ -46,7 +50,7 @@ export async function convertBufferToType<T extends CompressResultType>(
     case 'file':
       return bufferToFile(buffer, fileName, mimeType) as CompressResult<T>
     default:
-      return bufferToBlob(buffer, mimeType) as CompressResult<T>
+      throw new RangeError('Invalid result type: type must be one of buffer, base64, blob, or file')
   }
 }
 
@@ -70,8 +74,36 @@ function getMimeTypeFromFileName(fileName?: string): string | undefined {
   return ext ? mimeTypes[ext] : undefined
 }
 
+function getMimeTypeFromBuffer(buffer: Buffer): string | undefined {
+  if (buffer.slice(0, 8).equals(Buffer.from([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]))) {
+    return 'image/png'
+  }
+
+  if (buffer.slice(0, 2).equals(Buffer.from([0xFF, 0xD8]))) {
+    return 'image/jpeg'
+  }
+
+  if (buffer.slice(0, 4).equals(Buffer.from('RIFF', 'ascii'))
+    && buffer.slice(8, 12).equals(Buffer.from('WEBP', 'ascii'))) {
+    return 'image/webp'
+  }
+
+  if (buffer.slice(0, 6).equals(Buffer.from('GIF87a', 'ascii'))
+    || buffer.slice(0, 6).equals(Buffer.from('GIF89a', 'ascii'))) {
+    return 'image/gif'
+  }
+
+  return undefined
+}
+
 // 从File或Blob获取Buffer
 export async function getBufferFromFile(file: FileInterface | BlobInterface): Promise<Buffer> {
   const arrayBuffer = await file.arrayBuffer()
   return Buffer.from(arrayBuffer)
+}
+
+function bufferToArrayBuffer(buffer: Buffer): ArrayBuffer {
+  const arrayBuffer = new ArrayBuffer(buffer.byteLength)
+  new Uint8Array(arrayBuffer).set(buffer)
+  return arrayBuffer
 }

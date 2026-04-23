@@ -1,3 +1,4 @@
+import sharp from 'sharp'
 import { describe, expect, it } from 'vitest'
 import { compress, compressWithStats } from '../../src/index'
 import { createTestJPEG, createTestPNG, getTestImage, saveTestResult } from '../helpers'
@@ -39,6 +40,36 @@ describe('集成测试 - 所有工具协同工作', () => {
     console.log(`最佳工具: ${results.bestTool}`)
     console.log(`测试了 ${results.allResults.length} 个工具`)
     console.log(`总耗时: ${results.totalDuration}ms`)
+  })
+
+  it('应该在所有工具失败时返回原图作为最佳结果', async () => {
+    const testBuffer = createTestJPEG()
+
+    const results = await compress(testBuffer, {
+      quality: 0.8,
+      returnAllResults: true,
+    })
+    const stats = await compressWithStats(testBuffer, { quality: 0.8 })
+
+    expect(results.bestTool).toBe('original')
+    expect(Buffer.isBuffer(results.bestResult)).toBe(true)
+    expect(results.bestResult).toEqual(testBuffer)
+    expect(results.allResults.every(result => !result.success)).toBe(true)
+    expect(stats.bestTool).toBe('original')
+    expect(stats.compressedSize).toBe(testBuffer.length)
+    expect(stats.compressionRatio).toBe(0)
+  })
+
+  it('应该在高质量且无明显收益时统计原图作为最佳结果', async () => {
+    const testBuffer = createTestPNG()
+    const stats = await compressWithStats(testBuffer, { quality: 0.9 })
+    const compressedBuffer = Buffer.from(await stats.compressedFile.arrayBuffer())
+
+    expect(stats.bestTool).toBe('original')
+    expect(stats.compressedSize).toBe(testBuffer.length)
+    expect(stats.compressionRatio).toBe(0)
+    expect(compressedBuffer).toEqual(testBuffer)
+    expect(stats.toolsUsed.some(tool => tool.success)).toBe(true)
   })
 
   it('应该能够使用统计信息功能', async () => {
@@ -101,28 +132,6 @@ describe('集成测试 - 所有工具协同工作', () => {
     expect(blobResult.size).toBeGreaterThan(0)
   })
 
-  it('应该能够处理不同的压缩模式', async () => {
-    const testBuffer = createTestJPEG()
-
-    // keepQuality 模式
-    const qualityResult = await compress(testBuffer, {
-      quality: 0.9,
-      mode: 'keepQuality',
-    })
-    expect(Buffer.isBuffer(qualityResult)).toBe(true)
-
-    // keepSize 模式
-    const sizeResult = await compress(testBuffer, {
-      quality: 0.8,
-      mode: 'keepSize',
-    })
-    expect(Buffer.isBuffer(sizeResult)).toBe(true)
-
-    // 保存结果进行对比
-    saveTestResult('integration_keep_quality.jpg', qualityResult)
-    saveTestResult('integration_keep_size.jpg', sizeResult)
-  })
-
   it('应该能够处理不同的尺寸选项', async () => {
     const testBuffer = getTestImage()
 
@@ -146,7 +155,9 @@ describe('集成测试 - 所有工具协同工作', () => {
   })
 
   it('应该能够处理EXIF保留选项', async () => {
-    const testBuffer = createTestJPEG()
+    const testBuffer = getTestImage()
+    const inputMetadata = await sharp(testBuffer).metadata()
+    expect(inputMetadata.exif?.length).toBeGreaterThan(0)
 
     // 保留EXIF
     const preserveExifResult = await compress(testBuffer, {
@@ -154,7 +165,8 @@ describe('集成测试 - 所有工具协同工作', () => {
       preserveExif: true,
     })
     expect(Buffer.isBuffer(preserveExifResult)).toBe(true)
-    saveTestResult('integration_preserve_exif.jpg', preserveExifResult)
+    const preserveExifMetadata = await sharp(preserveExifResult).metadata()
+    expect(preserveExifMetadata.exif?.length).toBeGreaterThan(0)
 
     // 不保留EXIF
     const stripExifResult = await compress(testBuffer, {
@@ -162,20 +174,27 @@ describe('集成测试 - 所有工具协同工作', () => {
       preserveExif: false,
     })
     expect(Buffer.isBuffer(stripExifResult)).toBe(true)
-    saveTestResult('integration_strip_exif.jpg', stripExifResult)
+    const stripExifMetadata = await sharp(stripExifResult).metadata()
+    expect(stripExifMetadata.exif).toBeUndefined()
   })
 
   it('应该正确处理错误情况', async () => {
     // 空Buffer
     const emptyBuffer = Buffer.alloc(0)
-    await expect((await compress(emptyBuffer, { quality: 0.8 })).length)
-      .toBe(0)
+    await expect(compress(emptyBuffer, { quality: 0.8 }))
+      .rejects
+      .toThrow('Unsupported image format')
+
+    const invalidBuffer = Buffer.from('invalid image data')
+    await expect(compress(invalidBuffer, { quality: 0.8 }))
+      .rejects
+      .toThrow('Unsupported image format')
 
     // 无效质量参数
     const testBuffer = createTestPNG()
-    const result = await compress(testBuffer, { quality: 1.5 })
-    // 应该能处理超出范围的质量值，不应该抛出错误
-    expect(Buffer.isBuffer(result)).toBe(true)
+    await expect(compress(testBuffer, { quality: 1.5 }))
+      .rejects
+      .toThrow('quality must be a number between 0 and 1')
   })
 
   it('应该在开发模式下显示详细日志', async () => {

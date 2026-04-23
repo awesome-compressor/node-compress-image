@@ -49,7 +49,7 @@ export async function compressWithJimp(
     }
 
     // 设置质量
-    const quality = Math.round((options.quality || 0.8) * 100)
+    const quality = Math.round((options.quality ?? 0.8) * 100)
     if (quality >= 0 && quality <= 100) {
       image.quality(quality)
     }

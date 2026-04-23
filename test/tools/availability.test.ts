@@ -6,7 +6,7 @@ describe('工具可用性测试', () => {
   const tools = [
     { name: 'sharp', type: 'core', required: true },
     { name: 'imagemin', type: 'core', required: true },
-    { name: 'jimp', type: 'optional', required: true },
+    { name: 'jimp', type: 'optional', required: false },
     { name: 'tinify', type: 'optional', required: false },
   ]
 
@@ -42,14 +42,6 @@ describe('工具可用性测试', () => {
     for (const tool of coreTools) {
       expect(toolStatus[tool.name]?.available).toBe(true)
     }
-  })
-
-  it('应该至少有一些可选工具可用', async () => {
-    const optionalTools = tools.filter(t => !t.required)
-    const availableCount = optionalTools.filter(t => toolStatus[t.name]?.available).length
-
-    // 至少应该有一个可选工具可用（在开发环境中）
-    expect(availableCount).toBeGreaterThanOrEqual(0)
   })
 
   it('tinyPNG工具如果可用应该有API Key', async () => {

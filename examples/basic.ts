@@ -1,9 +1,9 @@
 import process from 'node:process'
-import { compress, compressWithStats } from '../src/index'
+import { compress, compressDetailed, compressVariants, compressWithStats, getCapabilities } from '../src/index'
 
 // 使用示例
 async function example() {
-  console.log('🚀 Node Image Compression 示例\n')
+  console.log('🚀 Node Compress Image 示例\n')
 
   // 创建一个简单的测试图像
   const testPNG = Buffer.from([
@@ -133,6 +133,37 @@ async function example() {
     console.log(`最佳结果大小: ${allResults.bestResult.length} bytes`)
     console.log(`总耗时: ${allResults.totalDuration}ms`)
     console.log(`工具数量: ${allResults.allResults.length}`)
+    console.log()
+
+    // 7. 能力探测
+    console.log('7. 能力探测:')
+    const capabilities = await getCapabilities()
+    console.log(`输入格式: ${capabilities.inputFormats.join(', ')}`)
+    console.log(`输出格式: ${capabilities.outputFormats.join(', ')}`)
+    console.log(`可用工具: ${capabilities.tools.filter(tool => tool.installed).map(tool => tool.tool).join(', ')}`)
+    console.log()
+
+    // 8. 格式转换和可解释结果
+    console.log('8. 格式转换和可解释结果:')
+    const detailed = await compressDetailed(testPNG, {
+      quality: 0.8,
+      format: 'webp',
+      strategy: 'balanced',
+    })
+    console.log(`输出格式: ${detailed.format}`)
+    console.log(`选择原因: ${detailed.selectedReason}`)
+    console.log(`输出大小: ${detailed.compressedSize} bytes`)
+    console.log()
+
+    // 9. 多格式变体
+    console.log('9. 多格式变体:')
+    const variants = await compressVariants(testPNG, {
+      quality: 0.8,
+      formats: ['webp', 'avif'],
+    })
+    variants.forEach((variant) => {
+      console.log(`  ${variant.format}: ${variant.result.compressedSize} bytes`)
+    })
     console.log()
 
     console.log('✅ 所有示例运行完成!')

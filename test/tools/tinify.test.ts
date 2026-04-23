@@ -130,6 +130,12 @@ describe('tinify 压缩工具测试', () => {
         { name: 'tinify' },
       ],
     })).rejects.toThrow('Tinify API key is required')
+
+    await expect(compressWithTinify(testBuffer, {
+      toolConfigs: [
+        { name: 'tinify', key: 123 as any },
+      ],
+    })).rejects.toThrow('Tinify API key must be a string')
   })
 
   it('处理无效输入时应该抛出错误', async () => {

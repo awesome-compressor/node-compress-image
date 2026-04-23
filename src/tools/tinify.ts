@@ -13,6 +13,10 @@ export async function compressWithTinify(
     }
     // 获取API Key - 优先从options中获取，其次从环境变量
     const tinifyConfig = options.toolConfigs?.find(config => config.name === 'tinify')
+    if (tinifyConfig?.key !== undefined && typeof tinifyConfig.key !== 'string') {
+      throw new TypeError('Tinify API key must be a string')
+    }
+
     const apiKey = tinifyConfig?.key || process.env.TINIFY_API_KEY
 
     if (!apiKey) {

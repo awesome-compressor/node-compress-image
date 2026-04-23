@@ -17,7 +17,7 @@ export async function compressWithImagemin(
       throw new Error('Imagemin module not properly loaded or missing buffer method')
     }
 
-    const quality = Math.round((options.quality || 0.6) * 100)
+    const quality = Math.round((options.quality ?? 0.6) * 100)
 
     // 验证质量参数
     if (quality < 0 || quality > 100) {
@@ -33,13 +33,13 @@ export async function compressWithImagemin(
       switch (imageType) {
         case 'image/jpeg':
         case 'image/jpg': {
-          // @ts-expect-error - optional dependency
-          const imageminJpegtran = await import('imagemin-jpegtran')
-          if (!imageminJpegtran?.default) {
-            throw new Error('imagemin-jpegtran plugin not available')
+          // @ts-expect-error - missing upstream types
+          const imageminMozjpeg = await import('imagemin-mozjpeg')
+          if (!imageminMozjpeg?.default) {
+            throw new Error('imagemin-mozjpeg plugin not available')
           }
           plugins = [
-            imageminJpegtran.default({
+            imageminMozjpeg.default({
               quality,
               progressive: true,
             }),
@@ -59,7 +59,7 @@ export async function compressWithImagemin(
           break
         }
         case 'image/webp': {
-          // @ts-expect-error - optional dependency
+          // @ts-expect-error - missing upstream types
           const imageminWebp = await import('imagemin-webp')
           if (!imageminWebp?.default) {
             throw new Error('imagemin-webp plugin not available')
@@ -72,7 +72,7 @@ export async function compressWithImagemin(
           break
         }
         case 'image/gif': {
-          // @ts-expect-error - optional dependency
+          // @ts-expect-error - missing upstream types
           const imageminGifsicle = await import('imagemin-gifsicle')
           if (!imageminGifsicle?.default) {
             throw new Error('imagemin-gifsicle plugin not available')
@@ -131,11 +131,11 @@ export async function compressWithImagemin(
 
       // 针对不同类型的错误提供更具体的信息
       if (error.message.includes('Cannot resolve module')) {
-        throw new Error(`Imagemin dependency not installed: ${error.message}. Please install imagemin and required plugins with: npm install imagemin imagemin-pngquant imagemin-jpegtran imagemin-webp imagemin-gifsicle`)
+        throw new Error(`Imagemin dependency not installed: ${error.message}. Please install imagemin and required plugins with: npm install imagemin imagemin-pngquant imagemin-mozjpeg imagemin-webp imagemin-gifsicle`)
       }
 
       if (error.message.includes('plugin not available') || error.message.includes('Failed to load Imagemin plugin')) {
-        throw new Error(`${error.message}. This is likely due to missing optional dependencies`)
+        throw new Error(`${error.message}. This is likely due to a missing imagemin plugin dependency`)
       }
 
       // 通用错误处理
@@ -171,6 +171,5 @@ function getImageType(buffer: Buffer): string {
     return 'image/gif'
   }
 
-  // 默认JPEG
-  return 'image/jpeg'
+  throw new Error('Unsupported image format: expected PNG, JPEG, WebP, or GIF input')
 }

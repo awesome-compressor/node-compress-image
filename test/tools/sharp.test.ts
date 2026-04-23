@@ -1,3 +1,4 @@
+import sharp from 'sharp'
 import { describe, expect, it } from 'vitest'
 import { compressWithSharp } from '../../src/tools/sharp'
 import { defaultOptions, getTestGIF, getTestJPEG, getTestPNG, isValidBuffer, saveTestResult } from '../helpers'
@@ -85,31 +86,44 @@ describe('sharp 压缩工具测试', () => {
     }
   })
 
-  it('应该能够转换为WebP格式', async () => {
+  it('应该在 preserveExif 为 true 时保留EXIF', async () => {
+    const testBuffer = getTestPNG()
+    const inputMetadata = await sharp(testBuffer).metadata()
+    expect(inputMetadata.exif?.length).toBeGreaterThan(0)
+
+    const withExif = await compressWithSharp(testBuffer, { ...defaultOptions, preserveExif: true })
+    const withoutExif = await compressWithSharp(testBuffer, { ...defaultOptions, preserveExif: false })
+
+    const withExifMetadata = await sharp(withExif).metadata()
+    const withoutExifMetadata = await sharp(withoutExif).metadata()
+
+    expect(withExifMetadata.exif?.length).toBeGreaterThan(0)
+    expect(withoutExifMetadata.exif).toBeUndefined()
+  })
+
+  it('应该保持PNG输出格式', async () => {
     const testBuffer = getTestPNG()
     const result = await compressWithSharp(testBuffer, defaultOptions)
 
     expect(isValidBuffer(result)).toBe(true)
     expect(result).toBeInstanceOf(Buffer)
-
-    // 保存测试结果
-    saveTestResult('sharp_webp_test.webp', result)
+    const metadata = await sharp(result).metadata()
+    expect(metadata.format).toBe('png')
   })
 
-  it('应该能够转换格式（PNG转JPEG）', async () => {
-    const testBuffer = getTestPNG()
-    const options = {
-      ...defaultOptions,
-      outputFormat: 'jpeg' as const,
-    }
+  it('应该拒绝Sharp工具未支持的图片格式', async () => {
+    const tiffBuffer = await sharp({
+      create: {
+        width: 1,
+        height: 1,
+        channels: 3,
+        background: 'red',
+      },
+    }).tiff().toBuffer()
 
-    const result = await compressWithSharp(testBuffer, options)
-
-    expect(isValidBuffer(result)).toBe(true)
-    expect(result).toBeInstanceOf(Buffer)
-
-    // 保存测试结果
-    saveTestResult('sharp_png_to_jpeg_test.jpg', result)
+    await expect(compressWithSharp(tiffBuffer, defaultOptions))
+      .rejects
+      .toThrow('Unsupported image format')
   })
 
   it('应该正确处理无效输入', async () => {

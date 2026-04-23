@@ -38,34 +38,37 @@ export async function compressWithSharp(
     }
 
     const format = metadata.format
+    if (options.metadata === 'all') {
+      processor = processor.keepMetadata()
+    }
+    else if (options.metadata === 'exif' || options.preserveExif) {
+      processor = processor.keepExif()
+    }
 
     // 根据格式进行压缩
     switch (format) {
       case 'jpeg':
         processor = processor.jpeg({
-          quality: Math.min(100, Math.max(1, Math.round((options.quality || 0.6) * 100))),
+          quality: Math.min(100, Math.max(1, Math.round((options.quality ?? 0.6) * 100))),
           mozjpeg: true,
         })
         break
       case 'png':
         processor = processor.png({
-          quality: Math.min(100, Math.max(1, Math.round((options.quality || 0.6) * 100))),
+          quality: Math.min(100, Math.max(1, Math.round((options.quality ?? 0.6) * 100))),
           compressionLevel: 9,
         })
         break
       case 'webp':
         processor = processor.webp({
-          quality: Math.min(100, Math.max(1, Math.round((options.quality || 0.6) * 100))),
+          quality: Math.min(100, Math.max(1, Math.round((options.quality ?? 0.6) * 100))),
         })
         break
       case 'gif':
         // Sharp对GIF支持有限，直接返回原buffer
         return buffer
       default:
-        // 默认转为JPEG
-        processor = processor.jpeg({
-          quality: Math.min(100, Math.max(1, Math.round((options.quality || 0.6) * 100))),
-        })
+        throw new Error(`Unsupported image format: Sharp supports JPEG, PNG, WebP, and GIF input, got ${format || 'unknown'}`)
     }
 
     const result = await processor.toBuffer()

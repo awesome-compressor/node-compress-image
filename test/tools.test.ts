@@ -179,11 +179,11 @@ describe('压缩工具单独测试', () => {
 
     it('应该能够导入Imagemin插件', async () => {
       await expect(import('imagemin-pngquant')).resolves.toBeDefined()
-      // @ts-expect-error - optional dependency
-      await expect(import('imagemin-jpegtran')).resolves.toBeDefined()
-      // @ts-expect-error - optional dependency
+      // @ts-expect-error - missing upstream types
+      await expect(import('imagemin-mozjpeg')).resolves.toBeDefined()
+      // @ts-expect-error - missing upstream types
       await expect(import('imagemin-webp')).resolves.toBeDefined()
-      // @ts-expect-error - optional dependency
+      // @ts-expect-error - missing upstream types
       await expect(import('imagemin-gifsicle')).resolves.toBeDefined()
     })
 
@@ -315,11 +315,9 @@ describe('压缩工具单独测试', () => {
     it('imagemin应该处理无效输入', async () => {
       const invalidBuffer = Buffer.from('invalid image data')
 
-      // Imagemin 可能不会对所有无效输入抛出错误，而是返回原始数据或处理后的数据
-      // 我们测试它不会崩溃，并且返回一个Buffer
-      const result = await compressWithImagemin(invalidBuffer, testOptions)
-      expect(Buffer.isBuffer(result)).toBe(true)
-      expect(result.length).toBeGreaterThan(0)
+      await expect(compressWithImagemin(invalidBuffer, testOptions))
+        .rejects
+        .toThrow('Unsupported image format')
     })
 
     it('应该处理空Buffer', async () => {
@@ -335,20 +333,11 @@ describe('压缩工具单独测试', () => {
     })
 
     it('imagemin应该处理完全无效的图像格式', async () => {
-      // 测试一个肯定会导致imagemin失败的场景
       const reallyInvalidBuffer = Buffer.from([0x00, 0x01, 0x02, 0x03])
 
-      try {
-        const result = await compressWithImagemin(reallyInvalidBuffer, testOptions)
-        // 如果没有抛出错误，检查结果是否合理
-        expect(Buffer.isBuffer(result)).toBe(true)
-        console.log('   Imagemin处理了无效输入但没有抛出错误')
-      }
-      catch (error) {
-        // 如果抛出了错误，这也是可接受的行为
-        expect(error).toBeInstanceOf(Error)
-        console.log('   Imagemin正确地拒绝了无效输入')
-      }
+      await expect(compressWithImagemin(reallyInvalidBuffer, testOptions))
+        .rejects
+        .toThrow('Unsupported image format')
     })
   })
 })
