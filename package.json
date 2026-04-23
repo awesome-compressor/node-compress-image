@@ -65,6 +65,9 @@
   "engines": {
     "node": ">=18.17.0"
   },
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "build": "tsdown",
     "dev": "npm run build -- --watch src",
