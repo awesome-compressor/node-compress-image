@@ -1,7 +1,7 @@
 {
   "name": "@awesome-compressor/node-compress-image",
   "type": "module",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "packageManager": "pnpm@10.13.1",
   "description": "Node.js image compressor and optimizer for JPEG, PNG, WebP and AVIF with Sharp, imagemin, Jimp and Tinify",
   "author": "Simon He",
